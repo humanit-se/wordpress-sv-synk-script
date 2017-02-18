@@ -1,0 +1,187 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Wordpress Synkroniserings Script
+ * @version 1.0
+ * @author Jamie Telin
+ */
+sync();
+
+function sync() {
+  // Initial clean up
+  cleanUp();
+  // Get all versions
+  $versions = getVersions();
+  // Get synced versions
+  $syncedVersions = getSyncedVersions();
+  // Filter unsynced
+  $unsynced = getUnsynced($versions, $syncedVersions);
+
+  while(count($unsynced) > 0) {
+    // Filter unsynced
+    $unsynced = getUnsynced($versions, $syncedVersions);
+    // Get next version to sync
+    $nextVersion = getNextUnsyncedVersion($unsynced);
+    // Download and unzip
+    echo "Syncing Wordpress ${nextVersion}\n";
+    $zipFile = download($nextVersion);
+    if($zipFile === false) {
+      echo "Could not sync Wordpress ${nextVersion}\n";
+    } else {
+      extractVersion($zipFile);
+      // Copy files to root
+      copyDir(realpath(dirname(__FILE__))."/wordpress", realpath(dirname(__FILE__)));
+      // Clean up
+      cleanUp([
+        realpath(dirname(__FILE__))."/wordpress",
+        $zipFile
+      ]);
+      gitCommit($nextVersion);
+    }
+    $syncedVersions[] = $nextVersion;
+  }
+  gitPush();
+}
+
+function gitCommit($version) {
+  echo "Making commit for ${version}\n";
+  $cmd = "git add -A";
+  exec($cmd, $output);
+  $cmd = 'git commit -m "Version '.$version.'"';
+  exec($cmd, $output);
+  echo "Creating tag v${version}\n";
+  $cmd = 'git tag -a v'.$version.' -m "Version '.$version.' - https://sv.wordpress.org/wordpress-'.$version.'-sv_SE.zip"';
+  exec($cmd, $output);
+}
+
+function gitPush() {
+  echo "Pushing commits and tags up to ${version}\n";
+  $cmd = 'git push -u origin master';
+  exec($cmd, $output);
+  $cmd = 'git push --tags';
+  exec($cmd, $output);
+}
+
+function copyDir($src, $dst) {
+  if (is_dir($src)) {
+    if (!file_exists($dst)) {
+      mkdir($dst);
+    }
+    $files = scandir($src);
+    foreach ($files as $file) {
+      if ($file != "." && $file != "..") {
+        copyDir("$src/$file", "$dst/$file");
+      }
+    }
+  } else if (file_exists($src)) {
+    copy($src, $dst);
+  }
+}
+
+function cleanUp($files = null) {
+  $useFullPath = true;
+  $ignore = [
+    '.',
+    '..',
+    'sync',
+    '.gitignore',
+    '.git',
+    'composer.json',
+    'README.md'
+  ];
+  if (is_null($files)) {
+    $files = scandir(realpath(dirname(__FILE__)));
+  } else {
+    $useFullPath = false;
+  }
+  foreach ($files as $file) {
+    if (!in_array($file, $ignore)) {
+      if ($useFullPath) {
+        $fullPath = realpath(dirname(__FILE__)) . "/${file}";
+      } else {
+        $fullPath = $file;
+      }
+      if (is_dir($fullPath)) {
+          removeDir($fullPath);
+      } else {
+          unlink($fullPath);
+      }
+    }
+  }
+}
+
+function removeDir($dir) {
+  if (empty($dir)) {
+    return false;
+  }
+  $files = array_diff(scandir($dir), array('.', '..'));
+
+  foreach ($files as $file) {
+    (is_dir("${dir}/${file}")) ? removeDir("${dir}/${file}") : unlink("${dir}/${file}");
+  }
+
+  return rmdir($dir);
+}
+
+function extractVersion($file) {
+  $zip = new ZipArchive;
+  $res = $zip->open($file);
+  if ($res === true) {
+    $zip->extractTo(realpath(dirname(__FILE__)));
+    $zip->close();
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function download($version) {
+  $stream = @fopen("https://sv.wordpress.org/wordpress-${version}-sv_SE.zip", 'r');
+  if($stream === false) {
+    return false;
+  }
+  $status = @file_put_contents(
+    realpath(dirname(__FILE__))."/wordpress-${version}-sv_SE.zip",
+    $stream
+  );
+
+  if ($status === false) {
+    return false;
+  } else {
+    return realpath(dirname(__FILE__))."/wordpress-${version}-sv_SE.zip";
+  }
+
+}
+
+function getNextUnsyncedVersion($unsynced) {
+  if (isset($unsynced[0])) {
+    return $unsynced[0];
+  } else {
+    return false;
+  }
+}
+
+function getUnsynced($versions, $syncedVersions) {
+  $unsynced = [];
+  foreach ($versions as $version) {
+    if (!in_array($version, $syncedVersions) && $version >= "2.3.1") {
+      $unsynced[] = $version;
+    }
+  }
+  return $unsynced;
+}
+
+function getVersions() {
+  $cmd = "git ls-remote --tags git@github.com:WordPress/WordPress.git | awk '{print $2}' | grep -v '{}' | awk -F\"/\" '{print $3}'";
+  exec($cmd, $output);
+  return $output;
+}
+
+function getSyncedVersions() {
+  $cmd = "git ls-remote --tags git@github.com:humanit-se/wordpress-sv.git | awk '{print $2}' | grep -v '{}' | awk -F\"/\" '{print $3}'";
+  exec($cmd, $output);
+  foreach ($output as &$version) {
+    $version = str_replace('v', '', $version);
+  }
+  return $output;
+}
