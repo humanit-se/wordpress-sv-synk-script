@@ -37,10 +37,10 @@ function sync() {
         $zipFile
       ]);
       gitCommit($nextVersion);
+      gitPush();
     }
     $syncedVersions[] = $nextVersion;
   }
-  gitPush();
 }
 
 function gitCommit($version) {

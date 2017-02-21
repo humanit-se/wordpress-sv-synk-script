@@ -30,4 +30,7 @@ cp wordpress-sv-synk-script/sync wordpress-sv/
 
 ```
 php sync
-```
+``
+
+## Tack
+`
