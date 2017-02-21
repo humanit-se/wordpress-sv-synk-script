@@ -45,20 +45,20 @@ function sync() {
 
 function gitCommit($version) {
   echo "Making commit for ${version}\n";
-  $cmd = "git add -A";
+  $cmd = 'git --work-tree='.realpath(dirname(__FILE__)).' --git-dir='.realpath(dirname(__FILE__)).'/.git add -A';
   exec($cmd, $output);
-  $cmd = 'git commit -m "Version '.$version.'"';
+  $cmd = 'git --work-tree='.realpath(dirname(__FILE__)).' --git-dir='.realpath(dirname(__FILE__)).'/.git commit -m "Version '.$version.'"';
   exec($cmd, $output);
   echo "Creating tag v${version}\n";
-  $cmd = 'git tag -a v'.$version.' -m "Version '.$version.' - https://sv.wordpress.org/wordpress-'.$version.'-sv_SE.zip"';
+  $cmd = 'git --work-tree='.realpath(dirname(__FILE__)).' --git-dir='.realpath(dirname(__FILE__)).'/.git tag -a v'.$version.' -m "Version '.$version.' - https://sv.wordpress.org/wordpress-'.$version.'-sv_SE.zip"';
   exec($cmd, $output);
 }
 
 function gitPush($version) {
   echo "Pushing commits and tags up to ${version}\n";
-  $cmd = 'GIT_SSH_COMMAND="ssh -i /mnt/persist/keys/id_rsa" git push -u origin master';
+  $cmd = 'GIT_SSH_COMMAND="ssh -i /mnt/persist/keys/id_rsa" git --work-tree='.realpath(dirname(__FILE__)).' --git-dir='.realpath(dirname(__FILE__)).'/.git push -u origin master';
   exec($cmd, $output);
-  $cmd = 'GIT_SSH_COMMAND="ssh -i /mnt/persist/keys/id_rsa" git push --tags';
+  $cmd = 'GIT_SSH_COMMAND="ssh -i /mnt/persist/keys/id_rsa" git --work-tree='.realpath(dirname(__FILE__)).' --git-dir='.realpath(dirname(__FILE__)).'/.git push --tags';
   exec($cmd, $output);
 }
 
