@@ -56,9 +56,9 @@ function gitCommit($version) {
 
 function gitPush($version) {
   echo "Pushing commits and tags up to ${version}\n";
-  $cmd = 'GIT_SSH_COMMAND="ssh -i /mnt/persist/keys/id_rsa" git --work-tree='.realpath(dirname(__FILE__)).' --git-dir='.realpath(dirname(__FILE__)).'/.git push -u origin master';
+  $cmd = 'export GIT_SSH_COMMAND="ssh -i /mnt/persist/keys/id_rsa"; git --work-tree='.realpath(dirname(__FILE__)).' --git-dir='.realpath(dirname(__FILE__)).'/.git push -u origin master';
   exec($cmd, $output);
-  $cmd = 'GIT_SSH_COMMAND="ssh -i /mnt/persist/keys/id_rsa" git --work-tree='.realpath(dirname(__FILE__)).' --git-dir='.realpath(dirname(__FILE__)).'/.git push --tags';
+  $cmd = 'export GIT_SSH_COMMAND="ssh -i /mnt/persist/keys/id_rsa"; git --work-tree='.realpath(dirname(__FILE__)).' --git-dir='.realpath(dirname(__FILE__)).'/.git push --tags';
   exec($cmd, $output);
 }
 
