@@ -49,7 +49,7 @@ function gitCommit($version) {
   echo "Making commit for ${version}\n";
   $cmd = 'git --work-tree='.realpath(dirname(__FILE__)).' --git-dir='.realpath(dirname(__FILE__)).'/.git add -A';
   exec($cmd, $output);
-  $cmd = 'git --work-tree='.realpath(dirname(__FILE__)).' --git-dir='.realpath(dirname(__FILE__)).'/.git commit -m "Version '.$version.'"';
+  $cmd = 'git --work-tree='.realpath(dirname(__FILE__)).' --git-dir='.realpath(dirname(__FILE__)).'/.git commit --author="humanit-se <>" -m "Version '.$version.'"';
   exec($cmd, $output);
   echo "Creating tag v${version}\n";
   $cmd = 'git --work-tree='.realpath(dirname(__FILE__)).' --git-dir='.realpath(dirname(__FILE__)).'/.git tag -a v'.$version.' -m "Version '.$version.' - https://sv.wordpress.org/wordpress-'.$version.'-sv_SE.zip"';
