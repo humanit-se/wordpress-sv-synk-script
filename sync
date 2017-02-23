@@ -156,8 +156,12 @@ function download($version) {
 }
 
 function getNextUnsyncedVersion($unsynced, $syncedVersions) {
-  $latest = $syncedVersions[count($syncedVersions)-1];
-  if (isset($unsynced[0]) && $latest > $unsynced[0]) {
+  if(isset($syncedVersions) && !empty($syncedVersions)) {
+    $latest = $syncedVersions[count($syncedVersions)-1];
+  } else {
+    $latest = 0;
+  }
+  if (isset($unsynced[0]) && $latest < $unsynced[0]) {
     return $unsynced[0];
   } else {
     return false;
