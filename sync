@@ -21,7 +21,7 @@ function sync() {
     // Filter unsynced
     $unsynced = getUnsynced($versions, $syncedVersions);
     // Get next version to sync
-    $nextVersion = getNextUnsyncedVersion($unsynced);
+    $nextVersion = getNextUnsyncedVersion($unsynced, $syncedVersions);
     // Download and unzip
     echo "Syncing Wordpress ${nextVersion}\n";
     $zipFile = download($nextVersion);
@@ -153,8 +153,9 @@ function download($version) {
 
 }
 
-function getNextUnsyncedVersion($unsynced) {
-  if (isset($unsynced[0])) {
+function getNextUnsyncedVersion($unsynced, $syncedVersions) {
+  $latest = $syncedVersions[count($syncedVersions)-1];
+  if (isset($unsynced[0]) && $latest > $unsynced[0]) {
     return $unsynced[0];
   } else {
     return false;
