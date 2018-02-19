@@ -2,6 +2,8 @@
 # Project
 ###########
 wordpress/
+!wordpress/wp-includes/js/tinymce/skins/
+!wordpress/wp-includes/js/tinymce/plugins/
 wordpress-*.zip
 
 ###########
